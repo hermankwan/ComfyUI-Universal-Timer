@@ -9,7 +9,7 @@ from .universal_timer import UniversalTimer
 
 NODE_CLASS_MAPPINGS = {"UniversalTimer": UniversalTimer}
 
-NODE_DISPLAY_NAME_MAPPINGS = {"UniversalTimer": "⏱️ Universal Timer"}
+NODE_DISPLAY_NAME_MAPPINGS = {"UniversalTimer": "🎛️ Universal Timer"}
 
 WEB_DIRECTORY = "./web"
 
