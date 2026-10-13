@@ -38,7 +38,7 @@ After installation, you can find this node by right-clicking on the canvas, navi
 
 > **Note:** This node relies strictly on native web standard components and ComfyUI API events. No external Python dependencies or `requirements.txt` are required.
 
-### Method 1: Via ComfyUI-Manager *(Pending Index Approval)*
+### Method 1: Via ComfyUI-Manager *(Recommended)*
 1. Open ComfyUI and click on **Manager** in the menu.
 2. Select **Custom Nodes Manager**.
 3. Search for `ComfyUI Universal Timer`.
