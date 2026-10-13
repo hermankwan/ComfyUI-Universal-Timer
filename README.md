@@ -99,7 +99,7 @@ Universal Timer distinguishes between ComfyUI’s native tensor processing and i
 ### v0.1.0
 * Initial release of **Universal Timer**.
 * Introduced dynamic unit mapping across 6 core output categories (`Image`, `Video`, `Audio`, `Prompt`, `Training`, `Custom`).
-* Added industrial ALL-CAPS status state machines (`[ READY ]`, `[ RUNNING ]`, `[ PAUSE ]`, `[ ERROR ]`).
+* Added industrial ALL-CAPS status state machines (`[ READY ]`, `[ CANCEL ]`, `[ PAUSE ]`, `[ RESUME ]`, `[ ERROR ]`).
 * Implemented workflow-scoped theme color persistence and hover-to-pause controls.
 
 ---
