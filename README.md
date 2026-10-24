@@ -1,5 +1,10 @@
 # 🎛️ ComfyUI Universal Timer
-**Version: v0.2.0**
+**Version: v0.2.1**
+
+<p align="center">
+  <img src="assets/uni_timer.gif" alt="Universal Timer Interaction Demo"><br>
+  <sub>*Click LED digits to Pause/Resume, double-click to reset, and click swatches to change colors.*</sub>
+</p>
 
 A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
 
@@ -26,18 +31,12 @@ After installation, you can find this node by right-clicking on the canvas, navi
   * ⚪ **Cool Gray (`[ READY ]`)**: Idle, waiting for execution.
   * 🔵 **Blue**: Workflow running.
   * 🟢 **Green (`[ Y / Y ]`)**: Workflow completed successfully.
-  * 🟡 **Yellow (`[ INTERRUPT ]`)**: Workflow interrupted by the user.
+  * 🟡 **Yellow (`[ INTERRUPT ]`)**: Workflow interrupted by the user or stopped by the safety fallback.
   * 🔴 **Pink (`[ ERROR ]`)**: Workflow encountered an error and stopped.
 * ⏸️ **Absolute Timer Independence**: Click the LED digits to pause/resume, or double-click to reset.
   > **⚠️ Semantic Note on Interaction:** Pausing **only freezes the UI time ticking**. It does *not* pause the backend workflow, nor does it stop the progress counter from updating. It is designed to let you exclude personal away-time from the final stats.
 * 🛡️ **Multi-Workflow Isolation**: Open multiple workflows in the same browser session. The timer states are perfectly isolated per workflow to prevent cross-contamination.
-
----
-
-<p align="center">
-  <img src="assets/uni_timer.gif" alt="Universal Timer Interaction Demo"><br>
-  <sub>*Click LED digits to Pause/Resume, double-click to reset, and click swatches to change colors.*</sub>
-</p>
+* ⏳ **Dynamic Safety Deadlock Fallback**: A smart, type-aware safety net that prevents the timer from running indefinitely if a third-party node enters a deadlock. The timeout threshold automatically adjusts based on your selected `workflow_type`. See details below.
 
 ---
 
@@ -64,30 +63,6 @@ After installation, you can find this node by right-clicking on the canvas, navi
 
 ---
 
-## 🎯 Conceptual Framework & Design Principles
-
-To maintain absolute clarity and maintainability across complex pipelines, **Universal Timer** enforces strict architectural boundaries regarding workflow typing and batch execution.
-
-### 1. The `workflow_type` Definition Rule (Output Asset Type Principle)
-The classification of a workflow is governed strictly by its **Final Output Asset Type**, regardless of the intermediate processing steps, auxiliary models, control networks, or prompt enhancements involved:
-* **`Image`**: Any pipeline whose terminal output is an image format.
-* **`Video`**: Pipelines whose terminal delivery consists of video sequences or animation files.
-* **`Audio`**: Pipelines terminating in sound or music synthesis.
-* **`Prompt`**: Workflows dedicated to LLM-driven text prompt engineering or structured generation.
-* **`Training`**: Workflows focused on model fine-tuning, embedding, or LoRA generation (`EPOCHS`).
-* **`Custom`**: Any alternative or experimental output type falling outside the standard categories (`ITEMS`).
-
-### 2. Total Count Principles: Tensor Batching vs. Sequential Loops
-Universal Timer distinguishes between ComfyUI’s native tensor processing and iterative loop execution:
-* **Native Tensor Batching (`batch_size = N` in KSampler / Latent)**:
-  * **Behavior**: Processed in parallel during a *single* prompt execution cycle.
-  * **Setting Rule**: Keep `total_count = 1`. The timer records the monolithic execution duration of the tensor bundle as 1 unit.
-* **Sequential / Iterative Batching (e.g., Loop nodes, Batch Loaders)**:
-  * **Behavior**: Processed iteratively across multiple execution rounds.
-  * **Setting Rule**: Set `total_count = N` to track accurate real-time loop progress.
-
----
-
 ## 🚀 How to Use & Interactive Controls
 
 1. Add **Universal Timer** to your ComfyUI workspace graph.
@@ -103,7 +78,36 @@ Universal Timer distinguishes between ComfyUI’s native tensor processing and i
 
 ---
 
+## 🛡️ Dynamic Safety Deadlock Fallback
+
+ComfyUI's custom node ecosystem sometimes experiences unexpected deadlocks. For example, third-party batch loaders (like *Sequential Image Loader*) may occasionally stop sending new prompts due to internal state bugs, even though they visually appear to still be running. In such rare cases, the backend stops processing, but the frontend timer might continue ticking indefinitely because it receives no "finish" signal.
+
+To guarantee that the timer will **never run forever**, we've implemented a **Dynamic Deadlock Fallback** that adapts to your selected `workflow_type`:
+
+| Workflow Type | Deadlock Timeout | Rationale |
+| :--- | :--- | :--- |
+| **`Prompt`** | 5 minutes | Text generation is usually very fast. |
+| **`Image`** | 10 minutes | Covers most upscaling and img2img tasks. |
+| **`Audio`** | 30 minutes | Audio synthesis may take longer. |
+| **`Custom`** | 60 minutes | A safe conservative default. |
+| **`Video`** | 120 minutes | Video generation requires significant time. |
+| **`Training`** | 480 minutes | Model training can run for hours. |
+
+**How it works:**
+- If the timer is running and **no progress heartbeat** has been received for the specified timeout, the node will query ComfyUI's backend (`/prompt` API) to check if any node is truly executing (`exec_info.executing`).
+- If the backend confirms it is completely idle (`executing == null`), the timer will automatically stop and display `[ INTERRUPT ]` in yellow.
+- If a genuine long task is still running, the backend will report `executing != null`, and the timer will **not** be falsely stopped.
+
+> **⏩ Don't want to wait?**  
+> If you notice the workflow has clearly stopped but the timer is still counting, simply **double-click the LED digits**. This instantly resets the timer manually and clears the ghost state.
+
+---
+
 ## 📋 Changelog
+
+### v0.2.1
+* **Added Dynamic Safety Deadlock Fallback**: Introduced a smart timeout mechanism that adapts to the selected `workflow_type` (e.g., 10 mins for Image, 120 mins for Video). Prevents infinite timers caused by third-party node deadlocks while protecting long-running tasks from being falsely terminated.
+* **Improved Status Handling**: `[ INTERRUPT ]` now properly covers both user-initiated interruptions and fallback-triggered stops.
 
 ### v0.2.0 (Major Architecture Refactor)
 * **Complete Codebase Rewrite**: Refactored into a modular ES Modules architecture (`timer_engine.js`, `progress_engine.js`, `ui_renderer.js`).
