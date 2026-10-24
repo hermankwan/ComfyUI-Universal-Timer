@@ -8,6 +8,8 @@
 
 A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
 
+> 💡 **Specifically generating batches of images?** For a more tailored experience with image batch loaders, check out [ComfyUI Batch Image Timer](https://github.com/hermankwan/ComfyUI-Batch-Image-Timer).
+
 ---
 
 ## 📌 Where to Find It in ComfyUI
