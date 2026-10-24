@@ -1,9 +1,9 @@
 """
 ComfyUI-Universal-Timer
-A universal, real-time 7-segment LED timer node for multi-modal workflows (Images, Video, Audio, Steps).
+A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .universal_timer import UniversalTimer
 

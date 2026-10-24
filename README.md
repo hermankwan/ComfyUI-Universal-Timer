@@ -1,18 +1,18 @@
 # 🎛️ ComfyUI Universal Timer
-**Version: v0.1.0**
+**Version: v0.2.0**
 
-A professional, industrial-grade monitoring and execution timer node for ComfyUI. Designed with dynamic unit mapping, real-time status reporting, and robust workflow categorization, **Universal Timer** provides a unified time-tracking and performance analysis framework for any type of ComfyUI generation pipeline.
+A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
 
 ---
 
 ## 📌 Where to Find It in ComfyUI
-After installation, you can find this node by right-clicking on the canvas, navigating to **utils** (or using the search bar and typing **`Universal Timer`**).
+After installation, you can find this node by right-clicking on the canvas, navigating to **utils/timer** (or using the search bar and typing **`Universal Timer`**).
 
 ---
 
 ## ✨ Features
 
-* 🏭 **Mechanical-Style Industrial UI**: Sleek, retro-digital LED appearance featuring all-caps status indicators (`[ READY ]`, `[ PAUSE ]`, `[ ERROR ]`) for a geek-friendly, clean aesthetic.
+* 🏭 **Mechanical-Style Industrial UI**: Sleek, retro-digital LED appearance featuring clean, intuitive status indicators for a geek-friendly aesthetic.
 * 🔄 **Dynamic Unit Mapping**: Automatically adapts measurement units and counter labels based on your selected workflow type:
   * `Image` ➔ `IMAGES`
   * `Video` ➔ `FRAMES`
@@ -20,16 +20,23 @@ After installation, you can find this node by right-clicking on the canvas, navi
   * `Prompt` ➔ `STEPS`
   * `Training` ➔ `EPOCHS`
   * `Custom` ➔ `ITEMS`
-* 🎨 **Theme Persistence**: Click-to-change color palette (White, Blue, Green, Yellow, Pink). Your visual preferences automatically persist inside the **Workflow JSON**.
-* 📊 **Live Progress & State Tracking**: Monitors real-time progress (`[ Current / Total ]`) alongside precise lifecycle management.
-* ⏸️ **Interactive Pause & Resume**: Hover over the lower counter region to toggle `[ PAUSE ]` / `[ RESUME ]` to exclude away-time from performance metrics.
-* 🛡️ **Robust Error Handling**: Automatically switches to an alert-red `[ ERROR ]` state when upstream execution failures or workflow exceptions occur.
+* 🎨 **Theme Persistence**: Click-to-change color palette (White, Blue, Green, Yellow, Pink). Your visual preferences automatically persist inside the **Workflow JSON** (per-workflow persistence).
+* 📊 **Macro-Level Accurate Timing**: Unlike native node timers, this timer measures the **entire duration** of a workflow—from the first task starting to the very last task completing—without resetting between iterations.
+* 🟢 **Dynamic Visual Status Feedback**: The progress counter `[ X / Y ] UNIT` (e.g., `[ 1 / 10 ] IMAGES`) changes color based on the workflow state:
+  * ⚪ **Cool Gray (`[ READY ]`)**: Idle, waiting for execution.
+  * 🔵 **Blue**: Workflow running.
+  * 🟢 **Green (`[ Y / Y ]`)**: Workflow completed successfully.
+  * 🟡 **Yellow (`[ INTERRUPT ]`)**: Workflow interrupted by the user.
+  * 🔴 **Pink (`[ ERROR ]`)**: Workflow encountered an error and stopped.
+* ⏸️ **Absolute Timer Independence**: Click the LED digits to pause/resume, or double-click to reset.
+  > **⚠️ Semantic Note on Interaction:** Pausing **only freezes the UI time ticking**. It does *not* pause the backend workflow, nor does it stop the progress counter from updating. It is designed to let you exclude personal away-time from the final stats.
+* 🛡️ **Multi-Workflow Isolation**: Open multiple workflows in the same browser session. The timer states are perfectly isolated per workflow to prevent cross-contamination.
 
 ---
 
 <p align="center">
   <img src="assets/uni_timer.gif" alt="Universal Timer Interaction Demo"><br>
-  <sub>*Industrial aesthetic with dynamic unit mapping, live status monitoring, and interactive controls.*</sub>
+  <sub>*Click LED digits to Pause/Resume, double-click to reset, and click swatches to change colors.*</sub>
 </p>
 
 ---
@@ -63,10 +70,10 @@ To maintain absolute clarity and maintainability across complex pipelines, **Uni
 
 ### 1. The `workflow_type` Definition Rule (Output Asset Type Principle)
 The classification of a workflow is governed strictly by its **Final Output Asset Type**, regardless of the intermediate processing steps, auxiliary models, control networks, or prompt enhancements involved:
-* **`Image`**: Any pipeline whose terminal output is an image format (covers standard Text-to-Image, Image-to-Image, Upscaling pipelines, etc.).
+* **`Image`**: Any pipeline whose terminal output is an image format.
 * **`Video`**: Pipelines whose terminal delivery consists of video sequences or animation files.
 * **`Audio`**: Pipelines terminating in sound or music synthesis.
-* **`Prompt`**: Workflows dedicated to LLM-driven text prompt engineering, optimization, or structured generation.
+* **`Prompt`**: Workflows dedicated to LLM-driven text prompt engineering or structured generation.
 * **`Training`**: Workflows focused on model fine-tuning, embedding, or LoRA generation (`EPOCHS`).
 * **`Custom`**: Any alternative or experimental output type falling outside the standard categories (`ITEMS`).
 
@@ -74,10 +81,10 @@ The classification of a workflow is governed strictly by its **Final Output Asse
 Universal Timer distinguishes between ComfyUI’s native tensor processing and iterative loop execution:
 * **Native Tensor Batching (`batch_size = N` in KSampler / Latent)**:
   * **Behavior**: Processed in parallel during a *single* prompt execution cycle.
-  * **Setting Rule**: Keep `total = 1`. The timer records the monolithic execution duration of the tensor bundle as 1 unit.
+  * **Setting Rule**: Keep `total_count = 1`. The timer records the monolithic execution duration of the tensor bundle as 1 unit.
 * **Sequential / Iterative Batching (e.g., Loop nodes, Batch Loaders)**:
   * **Behavior**: Processed iteratively across multiple execution rounds.
-  * **Setting Rule**: Set `total = N` to track accurate real-time loop progress (`[ Current / Total ]`).
+  * **Setting Rule**: Set `total_count = N` to track accurate real-time loop progress.
 
 ---
 
@@ -85,22 +92,33 @@ Universal Timer distinguishes between ComfyUI’s native tensor processing and i
 
 1. Add **Universal Timer** to your ComfyUI workspace graph.
 2. Select your pipeline category under **`workflow_type`** (the node instantly maps the corresponding unit label).
-3. Connect your item count to **`total`** if running sequential loops, then click **Queue Prompt**.
+3. Set the total count in **`total_count`** (manually or via widget connection) for sequential loops, then click **Queue Prompt**.
 
 ### 🖱️ Canvas Interactions
-* **Pause / Resume**: Hover over the bottom counter area while running. Click `[ PAUSE ]` to freeze the elapsed timer, and `[ RESUME ]` to resume.
-* **Manual Reset**: Click directly on the 7-segment LED time display digits at any time to reset the clock to `00:00:00`.
-* **Theme Swatches**: Click any color indicator swatch to change the LED glow color instantly.
+* **Single Click (Pause/Resume)**: Click anywhere on the 7-segment LED time digits to freeze or continue the timer. (The cursor will change to a pointer).
+* **Double Click (Reset)**: Double-click the LED digits to reset the clock back to `00:00:00`. 
+  * If the workflow is currently running, the timer will restart from zero immediately.
+  * If the workflow is idle, the clock will remain at `00:00:00`.
+* **Theme Swatches**: Click any of the 5 color blocks below the digits to change the LED glow color instantly.
 
 ---
 
 ## 📋 Changelog
 
+### v0.2.0 (Major Architecture Refactor)
+* **Complete Codebase Rewrite**: Refactored into a modular ES Modules architecture (`timer_engine.js`, `progress_engine.js`, `ui_renderer.js`).
+* **Batch Tracking Logic**: Rewrote the lifecycle monitoring logic to accurately track sequential loops and native batches without premature resetting.
+* **Bulletproof Termination**: Added a robust "queue empty" fallback debounce, eliminating the issue where the timer would run indefinitely if a workflow was interrupted mid-batch.
+* **State Isolation**: Timer interactions (Pause/Reset) are now fully decoupled from the progress counter. Added multi-workflow isolation.
+* **UI/UX Overhaul**: 
+  * Redesigned node layout and fixed window resizing conflicts.
+  * Introduced dynamic color feedback for statuses (Ready/Running/Complete/Error/Interrupt).
+  * Replaced the old hover-to-pause interaction with intuitive single-click/double-click controls.
+
 ### v0.1.0
 * Initial release of **Universal Timer**.
-* Introduced dynamic unit mapping across 6 core output categories (`Image`, `Video`, `Audio`, `Prompt`, `Training`, `Custom`).
-* Added industrial ALL-CAPS status state machines (`[ READY ]`, `[ CANCEL ]`, `[ PAUSE ]`, `[ RESUME ]`, `[ ERROR ]`).
-* Implemented workflow-scoped theme color persistence and hover-to-pause controls.
+* Introduced dynamic unit mapping across 6 core output categories.
+* Added industrial ALL-CAPS status state machines.
 
 ---
 
