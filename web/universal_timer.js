@@ -207,24 +207,13 @@ app.registerExtension({
         }
 
         node.onDrawBackground = function (ctx) {
-            const isThisNodeActive = (activeNodeId === String(this.id));
-            
             let timerMs = timer.getElapsedMs();
             let displayData = progress.getDisplayData();
             let isCompleted = progress.isCompleted;
 
-            if (!isThisNodeActive) {
-                if (!timer.isRunning && progress.isCompleted) {
-                    if (activeNodeId !== String(this.id)) {
-                        timerMs = 0;
-                        displayData = { inner: "READY", unit: "" };
-                        isCompleted = false;
-                    }
-                } else {
-                    timerMs = 0;
-                    displayData = { inner: "READY", unit: "" };
-                    isCompleted = false;
-                }
+            if (!timer.isRunning && !isCompleted && activeNodeId !== String(this.id)) {
+                timerMs = 0;
+                displayData = { inner: "READY", unit: "" };
             }
 
             const activeColor = this.properties.activeColor;

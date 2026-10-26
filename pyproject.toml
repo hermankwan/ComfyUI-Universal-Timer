@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-universal-timer"
 description = "A universal ComfyUI timer with real-time duration tracking and dynamic unit mapping for any generation pipeline."
-version = "0.2.1"
+version = "0.2.2"
 license = {file = "LICENSE"}
 dependencies = ["aiohttp"]
 

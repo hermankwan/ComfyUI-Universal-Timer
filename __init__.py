@@ -3,7 +3,7 @@ ComfyUI-Universal-Timer
 A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.2"
 
 from .universal_timer import UniversalTimer
 

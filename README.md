@@ -1,5 +1,5 @@
 # 🎛️ ComfyUI Universal Timer
-**Version: v0.2.1**
+**Version: v0.2.2**
 
 <p align="center">
   <img src="assets/uni_timer.gif" alt="Universal Timer Interaction Demo"><br>
@@ -39,6 +39,7 @@ After installation, you can find this node by right-clicking on the canvas, navi
   > **⚠️ Semantic Note on Interaction:** Pausing **only freezes the UI time ticking**. It does *not* pause the backend workflow, nor does it stop the progress counter from updating. It is designed to let you exclude personal away-time from the final stats.
 * 🛡️ **Multi-Workflow Isolation**: Open multiple workflows in the same browser session. The timer states are perfectly isolated per workflow to prevent cross-contamination.
 * ⏳ **Dynamic Safety Deadlock Fallback**: A smart, type-aware safety net that prevents the timer from running indefinitely if a third-party node enters a deadlock. The timeout threshold automatically adjusts based on your selected `workflow_type`. See details below.
+* ✨ **Polished Industrial Aesthetics**: Equipped with a new neon glow effect for all LED digits, plus support for multiple synchronized timers to benchmark complex, multi-modal pipelines.
 
 ---
 
@@ -78,6 +79,8 @@ After installation, you can find this node by right-clicking on the canvas, navi
   * If the workflow is idle, the clock will remain at `00:00:00`.
 * **Theme Swatches**: Click any of the 5 color blocks below the digits to change the LED glow color instantly.
 
+> 💡 **Pro Tip (Multi-Node Sync)**: You can add multiple Timer nodes to the same canvas. When the workflow runs, all timers will start and stop synchronously, displaying the exact same unified macro-time. This is perfect for benchmarking different stages of your pipeline!
+
 ---
 
 ## 🛡️ Dynamic Safety Deadlock Fallback
@@ -106,6 +109,11 @@ To guarantee that the timer will **never run forever**, we've implemented a **Dy
 ---
 
 ## 📋 Changelog
+
+### v0.2.2
+* **Added Multi-Timer Sync**: You can now drop multiple timers across a complex multi-modal workflow (e.g., Video + Audio) to benchmark different stages. All timers will show the exact same macro-time.
+* **Added Neon Glow Effect**: Enhanced the industrial UI by adding a dynamic, theme-matched neon glow to the 7-segment digits and status texts.
+* **Fixed Node Resizing Conflict**: Resolved the cursor conflict at the node corners, making manual resizing smooth and reliable.
 
 ### v0.2.1
 * **Added Dynamic Safety Deadlock Fallback**: Introduced a smart timeout mechanism that adapts to the selected `workflow_type` (e.g., 10 mins for Image, 120 mins for Video). Prevents infinite timers caused by third-party node deadlocks while protecting long-running tasks from being falsely terminated.
