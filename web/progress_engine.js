@@ -1,8 +1,17 @@
+/**
+ * ComfyUI-Universal-Timer
+ * A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
+ * 
+ * @version 0.2.3
+ * @copyright Copyright (c) 2026 Herman Kwan
+ * @license MIT
+ */
+
 export class ProgressEngine {
     constructor() {
         this.current = 0;
         this.total = 0;
-        this.status = "READY"; // READY | RUNNING | INTERRUPT | ERROR
+        this.status = "READY"; 
         this.isCompleted = false;
         this.unitLabel = "IMAGES";
     }
@@ -17,14 +26,10 @@ export class ProgressEngine {
 
     update(data) {
         if (this.status !== "RUNNING") return;
-        
         if (data.current != null) this.current = data.current;
         if (data.total != null) this.total = data.total;
         if (data.unit) this.unitLabel = data.unit;
-        
-        if (this.current > this.total) {
-            this.current = this.total;
-        }
+        if (this.current > this.total) this.current = this.total;
     }
 
     markCompleted() {
@@ -40,11 +45,9 @@ export class ProgressEngine {
         this.isCompleted = false;
     }
 
-    // 返回两部分数据，方便 UI 分别渲染
-    getDisplayData() {
-        if (this.status === "READY") return { inner: "READY", unit: "" };
-        if (this.status === "ERROR") return { inner: "ERROR", unit: "" };
-        if (this.status === "INTERRUPT") return { inner: "INTERRUPT", unit: "" };
-        return { inner: `${this.current} / ${this.total}`, unit: this.unitLabel };
+    getDisplayText() {
+        if (this.status === "READY") return "READY";
+        if (this.current > 0) return `${this.current} / ${this.total}`;
+        return this.status;
     }
 }

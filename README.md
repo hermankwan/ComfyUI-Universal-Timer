@@ -1,9 +1,13 @@
 # 🎛️ ComfyUI Universal Timer
-**Version: v0.2.2**
+
+![Version](https://img.shields.io/badge/version-0.2.3-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![ComfyUI](https://img.shields.io/badge/ComfyUI-custom%20node-orange)
+![Platform](https://img.shields.io/badge/platform-web%20%2F%20canvas-lightgrey)
 
 <p align="center">
   <img src="assets/uni_timer.gif" alt="Universal Timer Interaction Demo"><br>
-  <sub>*Click LED digits to Pause/Resume, double-click to reset, and click swatches to change colors.*</sub>
+  <sub>*Switch modes to view COMPUTE, TOTAL, or ETA. Click to Pause/Resume, double-click to reset, and click swatches to change colors.*</sub>
 </p>
 
 A universal execution timer for ComfyUI workflows that provides real-time duration tracking with dynamic unit mapping for any generation pipeline.
@@ -19,7 +23,11 @@ After installation, you can find this node by right-clicking on the canvas, navi
 
 ## ✨ Features
 
-* 🏭 **Mechanical-Style Industrial UI**: Sleek, retro-digital LED appearance featuring clean, intuitive status indicators for a geek-friendly aesthetic.
+* 🏭 **Mechanical-Style Industrial UI**: Sleek, retro-digital 7-segment LED appearance featuring clean, intuitive status indicators for a geek-friendly aesthetic.
+* 🕒 **Triple Timing Modes**:
+  * **COMPUTE** — Pure execution time (excludes queue wait). Supports Pause/Resume.
+  * **TOTAL** — Wall-clock time from start to finish, including all waits.
+  * **ETA** — Forecast of remaining batch time based on completed iterations.
 * 🔄 **Dynamic Unit Mapping**: Automatically adapts measurement units and counter labels based on your selected workflow type:
   * `Image` ➔ `IMAGES`
   * `Video` ➔ `FRAMES`
@@ -27,19 +35,18 @@ After installation, you can find this node by right-clicking on the canvas, navi
   * `Prompt` ➔ `STEPS`
   * `Training` ➔ `EPOCHS`
   * `Custom` ➔ `ITEMS`
-* 🎨 **Theme Persistence**: Click-to-change color palette (White, Blue, Green, Yellow, Pink). Your visual preferences automatically persist inside the **Workflow JSON** (per-workflow persistence).
+* 🎨 **Interactive Palette & Persistence**: Click a swatch to change color; the choice is saved in the **Workflow JSON** (per-workflow persistence).
 * 📊 **Macro-Level Accurate Timing**: Unlike native node timers, this timer measures the **entire duration** of a workflow—from the first task starting to the very last task completing—without resetting between iterations.
-* 🟢 **Dynamic Visual Status Feedback**: The progress counter `[ X / Y ] UNIT` (e.g., `[ 1 / 10 ] IMAGES`) changes color based on the workflow state:
-  * ⚪ **Cool Gray (`[ READY ]`)**: Idle, waiting for execution.
-  * 🔵 **Blue**: Workflow running.
-  * 🟢 **Green (`[ Y / Y ]`)**: Workflow completed successfully.
-  * 🟡 **Yellow (`[ INTERRUPT ]`)**: Workflow interrupted by the user or stopped by the safety fallback.
-  * 🔴 **Pink (`[ ERROR ]`)**: Workflow encountered an error and stopped.
-* ⏸️ **Absolute Timer Independence**: Click the LED digits to pause/resume, or double-click to reset.
-  > **⚠️ Semantic Note on Interaction:** Pausing **only freezes the UI time ticking**. It does *not* pause the backend workflow, nor does it stop the progress counter from updating. It is designed to let you exclude personal away-time from the final stats.
-* 🛡️ **Multi-Workflow Isolation**: Open multiple workflows in the same browser session. The timer states are perfectly isolated per workflow to prevent cross-contamination.
-* ⏳ **Dynamic Safety Deadlock Fallback**: A smart, type-aware safety net that prevents the timer from running indefinitely if a third-party node enters a deadlock. The timeout threshold automatically adjusts based on your selected `workflow_type`. See details below.
-* ✨ **Polished Industrial Aesthetics**: Equipped with a new neon glow effect for all LED digits, plus support for multiple synchronized timers to benchmark complex, multi-modal pipelines.
+* 🚦 **Color-Coded Status Counter `[ X / Y ]`**:
+  * ⚪ **Gray** `[ READY ]` — Idle, waiting for execution.
+  * 🔵 **Blue** `[ X / Y ]` — Workflow running.
+  * 🟢 **Green** `[ Y / Y ]` — Workflow completed successfully.
+  * 🟡 **Yellow** `[ X / Y ]` — Interrupted (retains exact count or shows `[ INTERRUPT ]` if before first item).
+  * 🔴 **Red** `[ X / Y ]` — Error (retains exact count or shows `[ ERROR ]` if before first item).
+* ⏸️ **Absolute Timer Independence**: Pausing or resetting the timer never affects the backend workflow or the progress counter, and vice versa. It is designed to let you exclude personal away-time from the final stats.
+* 🛡️ **Multi-Workflow Isolation**: Open multiple workflows in the same browser session. The timer states are perfectly isolated per workflow to prevent visual cross-contamination.
+* ⏳ **Dynamic Safety Deadlock Fallback**: A smart, type-aware safety net that prevents the timer from running indefinitely if a third-party node enters a deadlock. The timeout threshold automatically adjusts based on your selected `workflow_type`.
+* ✨ **Polished Industrial Aesthetics**: Equipped with a neon glow effect for all LED digits, plus support for multiple synchronized timers to benchmark complex, multi-modal pipelines.
 
 ---
 
@@ -72,20 +79,33 @@ After installation, you can find this node by right-clicking on the canvas, navi
 2. Select your pipeline category under **`workflow_type`** (the node instantly maps the corresponding unit label).
 3. Set the total count in **`total_count`** (manually or via widget connection) for sequential loops, then click **Queue Prompt**.
 
-### 🖱️ Canvas Interactions
-* **Single Click (Pause/Resume)**: Click anywhere on the 7-segment LED time digits to freeze or continue the timer. (The cursor will change to a pointer).
-* **Double Click (Reset)**: Double-click the LED digits to reset the clock back to `00:00:00`. 
-  * If the workflow is currently running, the timer will restart from zero immediately.
-  * If the workflow is idle, the clock will remain at `00:00:00`.
-* **Theme Swatches**: Click any of the 5 color blocks below the digits to change the LED glow color instantly.
+The node UI has **four interaction zones** — each responds only within its own area:
 
-> 💡 **Pro Tip (Multi-Node Sync)**: You can add multiple Timer nodes to the same canvas. When the workflow runs, all timers will start and stop synchronously, displaying the exact same unified macro-time. This is perfect for benchmarking different stages of your pipeline!
+| Zone | Interaction |
+|---|---|
+| **1. Mode tabs** (`ETA`&nbsp;/&nbsp;`COMPUTE`&nbsp;/&nbsp;`TOTAL`) | Click to switch mode. Active tab is highlighted blue. |
+| **2. LED timer digits** | **COMPUTE**: single-click = Pause/Resume, double-click = reset (continues if running, stays at `00:00:00` if idle).<br>**TOTAL**: single-click = brief flash (only while running); double-click = reset.<br>**ETA**: single/double-click = brief flash (only while running, no pause/reset). |
+| **3. Color swatches** (5 blocks) | Click to change LED color. Saved with the workflow. |
+| **4. Progress counter** `[ X / Y ]` | Display only — no interaction. |
+
+> 💡 **Pro Tip (Multi-Node Sync)**: You can add multiple Timer nodes to the same canvas. When the workflow runs, all timers will start and stop synchronously, displaying the exact same unified macro-time. This is perfect for benchmarking different stages of your multi-modal pipeline!
+
+---
+
+## 💡 How It Works
+
+### Timing Modes
+* **COMPUTE** — Pure execution time, from the first task start to the last task end. Pausable to exclude away-time.
+* **TOTAL** — Absolute wall-clock time. Keeps ticking even if COMPUTE is paused.
+* **ETA** — Estimated remaining time using a smoothed blend of the **global average cost per item** and the **latest iteration cost** (30% / 70% weighting). It adapts quickly to speed changes while staying stable.
+  > Shows `99:99:99` until the first item completes (`current` reaches 2), then counts down. Zeroes out when the workflow finishes.
+  > **⚠️ ETA is for sequential loops (`total_count > 1`).** For single-item workflows (`total_count = 1`), ETA remains at `99:99:99` during the run — use COMPUTE or TOTAL instead.
 
 ---
 
 ## 🛡️ Dynamic Safety Deadlock Fallback
 
-ComfyUI's custom node ecosystem sometimes experiences unexpected deadlocks. For example, third-party batch loaders (like *Sequential Image Loader*) may occasionally stop sending new prompts due to internal state bugs, even though they visually appear to still be running. In such rare cases, the backend stops processing, but the frontend timer might continue ticking indefinitely because it receives no "finish" signal.
+ComfyUI's custom node ecosystem sometimes experiences unexpected deadlocks. For example, third-party batch loaders may occasionally stop sending new prompts due to internal state bugs, even though they visually appear to still be running. In such rare cases, the backend stops processing, but the frontend timer might continue ticking indefinitely because it receives no "finish" signal.
 
 To guarantee that the timer will **never run forever**, we've implemented a **Dynamic Deadlock Fallback** that adapts to your selected `workflow_type`:
 
@@ -108,7 +128,7 @@ To guarantee that the timer will **never run forever**, we've implemented a **Dy
 
 ---
 
-## ❓ FAQ & Known Limitations
+## ⚠️ FAQ & Known Limitations
 
 **Q: I added multiple Timer nodes to one workflow, but the progress counter is jumping or resetting. Why?**
 > **A:** The Timer engine is designed to track the **entire macro-duration** of a workflow using a global single-state per session. Because of this, all Timer nodes in the same canvas are synchronized and share the same macro-progress.
@@ -117,9 +137,21 @@ To guarantee that the timer will **never run forever**, we've implemented a **Dy
 > 
 > 👉 **Best Practice**: If you need to use multiple timers for benchmarking different stages (e.g., Loader vs. Upscaler), **please ensure all connected Timer nodes have the exact same `total_count` value**. For normal usage, we recommend adding only **one** Timer node to your workflow.
 
+* **Interrupt/error before first task completes**: Counter shows literal `[ INTERRUPT ]` / `[ ERROR ]` (no progress to retain).
+* **Rapid consecutive Queue clicks**: The previous run may not have fully reset; ETA may briefly show stale values until `current` reaches 1 again (force-restarts clocks when `current === 1`).
+* **ETA in single-item workflows**: Stays at `99:99:99` during execution (no history). Use COMPUTE or TOTAL.
+
 ---
 
 ## 📋 Changelog
+
+### v0.2.3
+* **Triple Timing Modes**: Added `ETA` and `TOTAL` alongside `COMPUTE` to match the Batch Image Timer architecture.
+* **Smart ETA**: 30/70 blend of global average and latest iteration cost; excludes initial model-load overhead.
+* **Color-Coded Counter**: Text `[ INTERRUPT ]` / `[ ERROR ]` dynamically replaces the progress fraction if interrupted before the first item finishes.
+* **UI & Interaction Polish**: Panel-only cursor logic for smooth node drag/resize; enhanced LED glow. Replaced old hover-to-pause with intuitive click interactions.
+* **Refined Display Isolation**: Each workflow canvas strictly isolates its own live timer display.
+* **Force-restart on `current === 1`**: Handles rapid Queue clicks more gracefully.
 
 ### v0.2.2
 * **Added Multi-Timer Sync**: You can now drop multiple timers across a complex multi-modal workflow (e.g., Video + Audio) to benchmark different stages. All timers will show the exact same macro-time.
