@@ -181,15 +181,34 @@ app.registerExtension({
 
         const typeWidget = node.widgets?.find(w => w.name === "workflow_type");
         if (typeWidget) {
+            const labels = { 
+                "Image": "IMAGES", "Video": "FRAMES", "Audio": "CLIPS", 
+                "Prompt": "STEPS", "Training": "EPOCHS", "Custom": "ITEMS" 
+            };
+            
+            progress.unitLabel = labels[typeWidget.value] || "ITEMS";
+
             const origCallback = typeWidget.callback;
             typeWidget.callback = function (v) {
                 node.properties.workflowType = v;
-                const labels = { "Image": "IMAGES", "Video": "FRAMES", "Audio": "CLIPS", "Prompt": "STEPS", "Training": "EPOCHS", "Custom": "ITEMS" };
                 progress.unitLabel = labels[v] || "ITEMS";
                 app.graph?.setDirtyCanvas(true, true);
                 if (origCallback) return origCallback.apply(this, arguments);
             };
         }
+
+        const origOnConfigure = node.onConfigure;
+        node.onConfigure = function(info) {
+            if (origOnConfigure) origOnConfigure.apply(this, arguments);
+            if (typeWidget) {
+                const labels = { 
+                    "Image": "IMAGES", "Video": "FRAMES", "Audio": "CLIPS", 
+                    "Prompt": "STEPS", "Training": "EPOCHS", "Custom": "ITEMS" 
+                };
+                progress.unitLabel = labels[typeWidget.value] || "ITEMS";
+            }
+            app.graph?.setDirtyCanvas(true, true);
+        };
 
         if (!node._hasInitialSized) {
             node._hasInitialSized = true;
@@ -197,7 +216,7 @@ app.registerExtension({
                 if (!node.widgets || node.widgets.length === 0) return;
                 const lastWidget = node.widgets[node.widgets.length - 1];
                 const widgetBottom = (lastWidget.last_y !== undefined) ? lastWidget.last_y + (lastWidget.computeSize ? lastWidget.computeSize()[1] : 24) : 80;
-                const minHeight = widgetBottom + 15 + 130;
+                const minHeight = widgetBottom + 15 + 130; // 按你的测试结果，已改为 130
                 if (!node.size || isNaN(node.size[1]) || node.size[1] < minHeight) {
                     node.size = [Math.max(node.size ? node.size[0] : 290, 290), minHeight];
                     app.graph?.setDirtyCanvas(true, true);
