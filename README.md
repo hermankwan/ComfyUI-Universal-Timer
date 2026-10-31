@@ -41,8 +41,8 @@ After installation, you can find this node by right-clicking on the canvas, navi
   * ⚪ **Gray** `[ READY ]` — Idle, waiting for execution.
   * 🔵 **Blue** `[ X / Y ]` — Workflow running.
   * 🟢 **Green** `[ Y / Y ]` — Workflow completed successfully.
-  * 🟡 **Yellow** `[ X / Y ]` — Interrupted (retains exact count or shows `[ INTERRUPT ]` if before first item).
-  * 🔴 **Red** `[ X / Y ]` — Error (retains exact count or shows `[ ERROR ]` if before first item).
+  * 🟡 **Yellow** `[ X / Y ]` — Interrupted (retains exact count).
+  * 🔴 **Red** `[ X / Y ]` — Error (retains exact count).
 * ⏸️ **Absolute Timer Independence**: Pausing or resetting the timer never affects the backend workflow or the progress counter, and vice versa. It is designed to let you exclude personal away-time from the final stats.
 * 🛡️ **Multi-Workflow Isolation**: Open multiple workflows in the same browser session. The timer states are perfectly isolated per workflow to prevent visual cross-contamination.
 * ⏳ **Dynamic Safety Deadlock Fallback**: A smart, type-aware safety net that prevents the timer from running indefinitely if a third-party node enters a deadlock. The timeout threshold automatically adjusts based on your selected `workflow_type`.
@@ -120,7 +120,7 @@ To guarantee that the timer will **never run forever**, we've implemented a **Dy
 
 **How it works:**
 - If the timer is running and **no progress heartbeat** has been received for the specified timeout, the node will query ComfyUI's backend (`/prompt` API) to check if any node is truly executing (`exec_info.executing`).
-- If the backend confirms it is completely idle (`executing == null`), the timer will automatically stop and display `[ INTERRUPT ]` in yellow.
+- If the backend confirms it is completely idle (`executing == null`), the timer will automatically stop and display a yellow counter (retaining the exact progress).
 - If a genuine long task is still running, the backend will report `executing != null`, and the timer will **not** be falsely stopped.
 
 > **⏩ Don't want to wait?**  
@@ -131,13 +131,13 @@ To guarantee that the timer will **never run forever**, we've implemented a **Dy
 ## ⚠️ FAQ & Known Limitations
 
 **Q: I added multiple Timer nodes to one workflow, but the progress counter is jumping or resetting. Why?**
-> **A:** The Timer engine is designed to track the **entire macro-duration** of a workflow using a global single-state per session. Because of this, all Timer nodes in the same canvas are synchronized and share the same macro-progress.
+> **A:** The Timer engine is designed to track the **entire macro-duration** of a workflow using a global single-state per session. All Timer nodes in the same canvas are synchronized and share the same macro-progress.
 > 
-> If you place multiple Timer nodes but set different `total_count` values, the backend will continuously detect a "changed total" and reset its counter, causing chaotic jumping.
+> If you place multiple Timer nodes but set different `total_count` values, the backend will detect a "changed total" on every cycle, resetting its counter and causing chaotic jumping. 
 > 
-> 👉 **Best Practice**: If you need to use multiple timers for benchmarking different stages (e.g., Loader vs. Upscaler), **please ensure all connected Timer nodes have the exact same `total_count` value**. For normal usage, we recommend adding only **one** Timer node to your workflow.
+> 👉 **Best Practice**: If you need to benchmark different stages (e.g., Loader vs. Upscaler), **ensure all connected Timer nodes share the exact same `total_count` value**. For normal usage, we recommend adding only **one** Timer node per workflow.
 
-* **Interrupt/error before first task completes**: Counter shows literal `[ INTERRUPT ]` / `[ ERROR ]` (no progress to retain).
+* **Interrupt/error before first task completes**: Counter shows `[ 0 / Y ]` since no progress has been made yet.
 * **Rapid consecutive Queue clicks**: The previous run may not have fully reset; ETA may briefly show stale values until `current` reaches 1 again (force-restarts clocks when `current === 1`).
 * **ETA in single-item workflows**: Stays at `99:99:99` during execution (no history). Use COMPUTE or TOTAL.
 
@@ -148,7 +148,7 @@ To guarantee that the timer will **never run forever**, we've implemented a **Dy
 ### v0.2.3
 * **Triple Timing Modes**: Added `ETA` and `TOTAL` alongside `COMPUTE` to match the Batch Image Timer architecture.
 * **Smart ETA**: 30/70 blend of global average and latest iteration cost; excludes initial model-load overhead.
-* **Color-Coded Counter**: Text `[ INTERRUPT ]` / `[ ERROR ]` dynamically replaces the progress fraction if interrupted before the first item finishes.
+* **Color-Coded Counter**: Removed text-based `[ INTERRUPT ]` / `[ ERROR ]` in favor of the unified colored `[ X / Y ]` format.
 * **UI & Interaction Polish**: Panel-only cursor logic for smooth node drag/resize; enhanced LED glow. Replaced old hover-to-pause with intuitive click interactions.
 * **Refined Display Isolation**: Each workflow canvas strictly isolates its own live timer display.
 * **Force-restart on `current === 1`**: Handles rapid Queue clicks more gracefully.
